@@ -1,7 +1,5 @@
 package aoc2018
 
-import scala.collection.SortedSet
-
 object Day2 extends App {
   val instructions = io.Source.fromFile("data/2018/day2.txt").getLines().toList
 
