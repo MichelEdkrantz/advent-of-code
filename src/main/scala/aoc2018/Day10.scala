@@ -1,16 +1,10 @@
 package aoc2018
 
-object Tools {
 
-  implicit class TuppleAdd(t: (Int, Int)) {
-    def +(p: (Int, Int)) = (p._1 + t._1, p._2 + t._2)
-  }
-
-}
 
 object Day10 extends App {
 
-  import Tools.TuppleAdd
+  import tools.Tools.TupleAdd
 
   val instructions = io.Source.fromFile("data/2018/day10.txt").getLines
   val pattern = "position=<([\\d-]+),([\\d-]+)>velocity=<([\\d-]+),([\\d-]+)>".r
