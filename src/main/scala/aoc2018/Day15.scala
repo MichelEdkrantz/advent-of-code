@@ -12,7 +12,6 @@ object Game {
   }
   val around = Seq((-1,0), (0,-1), (0, 1), (1,0)) // in read order
   def aroundPositions(p: Position) = around.map(_ + p)
-
 }
 
 class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
@@ -57,10 +56,9 @@ class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
       case _ => None
     }
   }
-  def isBlocked(p: Position): Boolean = state.contains(p) || !isOpenGround(p)
+  val allCreatures = state.values.toList
 
-  //both teams still alive
-  def continue = state.groupBy(_._2.race).size > 1
+  def isBlocked(p: Position): Boolean = state.contains(p) || !isOpenGround(p)
 
   def shortestPaths(from: Position, to: Set[Position]) = {
     //expand using djikstra's algorithm
@@ -94,7 +92,7 @@ class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
   }
 
   def attack(p: Position, enemy: Creature): Unit = {
-    enemy.hp -= 3
+    enemy.hp -= (if(enemy.isElf) 3 else elfPower)
     if(enemy.hp <= 0) {
      // println(s"Killed enemy $enemy at position $p")
       state.remove(p)
@@ -108,7 +106,7 @@ class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
   }
 
   def getNextPos(p: Position, inRange: Set[Position]) = {
-    if(inRange.isEmpty)
+    if (inRange.isEmpty)
       None
     else {
       //if inrange in around positions, much easier...
@@ -118,13 +116,16 @@ class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
     }
   }
 
-  def run(): Unit = {
-    printMap()
+  //both teams still alive
+  def continue = state.groupBy(_._2.race).size > 1
+
+  def run(condition: => Boolean): Int = {
+    //printMap()
     var t = 0
     var unitsLeft = false
-    while(continue) {
+    while (condition) {
       t += 1
-      println(s"\nAt t=$t")
+      //println(s"\nAt t=$t")
       //calculate player order
       val order = state.iterator.toList.sortBy(_._1)
 
@@ -139,8 +140,8 @@ class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
         adjacentEnemy match {
           case Some((enemyPos, enemy)) => attack(enemyPos, enemy)
           case None if targets.isEmpty =>
-              println("All enemies killed")
-              unitsLeft = true
+            //println("All enemies killed")
+            unitsLeft = true
           case None =>
             //else find attackpositions to move to
             val inRange = targets.map(t => inRangePositions(t._1)).flatten.toSet
@@ -150,9 +151,9 @@ class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
             getNextPos(pos, inRange).foreach { case (len, nextPos) =>
               //println(s"Move creature $creature from $pos to $nextPos, got l=$len")
               state(nextPos) = state.remove(pos).get
-              if(len <= 2) {
+              if (len <= 2) {
                 val adjacentEnemies = aroundPositions(nextPos)
-                  .flatMap(p => state.get(p).filter(_.race !=creature.race).map(p -> _))
+                  .flatMap(p => state.get(p).filter(_.race != creature.race).map(p -> _))
                 selectAdjacentEnemy(adjacentEnemies).foreach {
                   //attack target in range
                   case (enemyPos, enemy) => attack(enemyPos, enemy)
@@ -161,25 +162,73 @@ class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
             }
         }
       }
-      printMap()
+      //printMap()
     }
-    if(unitsLeft)
-      t-=1
-
-    val remainingHitPoints = state.map(_._2.hp).sum
-    println(t, remainingHitPoints, t * remainingHitPoints)
+    if (unitsLeft)
+      t -= 1
+    t
   }
 
+  def bothRacesHasUnitsLeft = {
+    state.groupBy(_._2.race).size > 1
+  }
+
+  def getOutcome(t: Int) = {
+    val remainingHitPoints = state.map(_._2.hp).sum
+    (t, remainingHitPoints, t * remainingHitPoints)
+  }
+
+  def run1 = {
+    def condition = bothRacesHasUnitsLeft
+    val t = run(condition)
+    getOutcome(t)
+  }
+
+  def run2 = {
+    def anElfIsDead = allCreatures.filter(_.isElf).exists(_.hp <= 0)
+    def condition =  !anElfIsDead && bothRacesHasUnitsLeft
+    val t = run(condition)
+    println(s"Game ended at t=$t with elfpower=$elfPower, dead elf=${anElfIsDead}. Outcome=${getOutcome(t)}")
+    !anElfIsDead
+  }
+}
+
+object BinSearch {
+  def binarySearch: (Int => Boolean) => (Int, Int) => Int = f => (l, h) => {
+    val mid = l + ((h - l) / 2)
+    println(s"l=$l h=$h, mid=$mid")
+    mid match {
+      case _ if (l >= h) => h
+      case mid if (f(mid)) => binarySearch(f)(l, mid)
+      case mid => binarySearch(f)(mid + 1, h)
+    }
+  }
 }
 
 object Day15 extends App {
 
   val instructions = io.Source.fromFile("data/2018/day15.txt").getLines.map(_.toVector).toVector
-  val g = new Game(instructions, elfPower = 3)
-  g.run()
-  //val sp = shortestPaths((3,2), Set((3,2)))
-  //println(sp)
-//  val inRange = Set((2,1))
- // val n = getNextPos2((3,1), inRange)
-//  println(n)
+
+  def part1(): Unit = {
+    val g = new Game(instructions, elfPower = 3)
+    println(g.run1)
+  }
+
+  def part2(): Unit = {
+    def targetFun(int: Int): Boolean = {
+      val g = new Game(instructions, elfPower = int)
+      g.run2
+    }
+    //get puzzle answer from logs...we could memoize the outcome from above but
+    // after spending too many hours on this probem, why bother?
+    val elfPower = BinSearch.binarySearch(targetFun)(3, 50)
+    println(elfPower)
+  }
+
+  def part2test(): Unit = {
+    def targetFun(int: Int) = int > 76
+    val answer = BinSearch.binarySearch(targetFun)(3, 200)
+    println(answer)
+  }
+  part2()
 }
