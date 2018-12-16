@@ -5,27 +5,29 @@ import tools.Tools.TupleMath
 
 import scala.collection.mutable
 
-object Day15 extends App {
-
-  val instructions = io.Source.fromFile("data/2018/day15.txt").getLines.map(_.toVector).toVector
-  case class Creature(race: Char, var hp: Int = 200) {
-    def isElf = race.equals('E')
-  }
-
-  val plainMap = instructions.map(_.map {
-    case 'E' | 'G' => '.'
-    case o => o
-  })
-
-
+object Game {
   def isAdjacent(p1: Position, p2: Position): Boolean = {
     val d = p1 - p2
     Math.abs(d._1) + Math.abs(d._2) == 1
   }
-
-  def isOpenGround(p: Position): Boolean = plainMap(p._1)(p._2) == '.'
   val around = Seq((-1,0), (0,-1), (0, 1), (1,0)) // in read order
   def aroundPositions(p: Position) = around.map(_ + p)
+
+}
+
+class Game(initialState: Vector[Vector[Char]], elfPower: Int) {
+  import Game._
+
+  case class Creature(race: Char, var hp: Int = 200) {
+    def isElf = race.equals('E')
+  }
+
+  val plainMap = initialState.map(_.map {
+    case 'E' | 'G' => '.'
+    case o => o
+  })
+
+  def isOpenGround(p: Position): Boolean = plainMap(p._1)(p._2) == '.'
   def inRangePositions(p: Position): Seq[Position] = aroundPositions(p).filterNot(isBlocked)
 
   def dijkstra1(source: Position): (Map[Position, Int], Map[Position, Position]) = {
@@ -49,7 +51,7 @@ object Day15 extends App {
     (res.toMap, pred.toMap)
   }
 
-  val state = mutable.Map() ++ instructions.zipWithIndex.flatMap { case (line, i) =>
+  val state = mutable.Map() ++ initialState.zipWithIndex.flatMap { case (line, i) =>
     line.zipWithIndex.flatMap {
       case (c, j) if c == 'E' | c == 'G' => Some((i, j) -> Creature(c))
       case _ => None
@@ -161,20 +163,23 @@ object Day15 extends App {
       }
       printMap()
     }
-    if(unitsLeft) t-=1
+    if(unitsLeft)
+      t-=1
 
     val remainingHitPoints = state.map(_._2.hp).sum
     println(t, remainingHitPoints, t * remainingHitPoints)
   }
 
-  run()
+}
+
+object Day15 extends App {
+
+  val instructions = io.Source.fromFile("data/2018/day15.txt").getLines.map(_.toVector).toVector
+  val g = new Game(instructions, elfPower = 3)
+  g.run()
   //val sp = shortestPaths((3,2), Set((3,2)))
   //println(sp)
 //  val inRange = Set((2,1))
  // val n = getNextPos2((3,1), inRange)
 //  println(n)
-  //val p = shortestPaths((3,3), )
-
-  //val p = shortestPaths((1,1), Seq((3,1), (10,2)))
-  //262752, 264115, 266730
 }
