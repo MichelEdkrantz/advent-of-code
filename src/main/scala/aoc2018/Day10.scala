@@ -4,7 +4,7 @@ package aoc2018
 
 object Day10 extends App {
 
-  import tools.Tools.TupleAdd
+  import tools.Tools.TupleMath
 
   val instructions = io.Source.fromFile("data/2018/day10.txt").getLines
   val pattern = "position=<([\\d-]+),([\\d-]+)>velocity=<([\\d-]+),([\\d-]+)>".r

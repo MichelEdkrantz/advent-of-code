@@ -5,7 +5,7 @@ import scala.collection.mutable
 object Day13 extends App {
   val instructions = io.Source.fromFile("data/2018/day13.txt").getLines.map(_.toVector).toList
 
-  import tools.Tools.TupleAdd
+  import tools.Tools.TupleMath
 
   case class DriverState(pos: (Int, Int), vel: (Int, Int), num: Int)
   case class CrashEvent(time: Int, driver: Int, pos: (Int, Int))
