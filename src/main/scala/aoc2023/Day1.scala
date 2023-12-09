@@ -17,6 +17,8 @@ object Day1 extends App {
   val ans1 = instructions1.map(countLine1).map(sumLine).sum
   println(ans1)
 
+  // another version to try here would be some kind of sliding window of size 5
+  // regex is super fast but the reverse search is a bit ugly
   val numbers = "one|two|three|four|five|six|seven|eight|nine"
   val digitMatcher = s"($numbers|\\d)".r
   val revDigitMatcher = s"(${numbers.reverse}|\\d)".r
