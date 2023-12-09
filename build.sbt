@@ -2,6 +2,6 @@ name := "aoc"
 
 version := "0.1"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.13.11"
 
-libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.7"
+libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.0"

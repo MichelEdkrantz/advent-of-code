@@ -50,10 +50,10 @@ object Day4 extends App {
   val answer1 = maxMinute._1 * g
   println(answer1)
 
-  val maxMinutePerGuard: Map[Int, (Int, Int)] = sleepingTimesPerGuard.mapValues { ranges =>
-    val v = ranges.flatMap(_.toList).groupBy(a => a).mapValues(_.size)
+  val maxMinutePerGuard: Map[Int, (Int, Int)] = sleepingTimesPerGuard.view.mapValues { ranges =>
+    val v = ranges.flatMap(_.toList).groupBy(a => a).view.mapValues(_.size).toMap
     if(v.nonEmpty) v.maxBy(_._2) else (0,0)
-  }
+  }.toMap
   val max = maxMinutePerGuard.maxBy(_._2._2)
   println(max)
 

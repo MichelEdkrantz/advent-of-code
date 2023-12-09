@@ -2,6 +2,7 @@
   * Created by Michel Edkrantz on 2015-01-06.
   */
 
+/*
 import aoc2015.JsonUtil
 import aoc2015.JsonUtil.Dict
 
@@ -25,7 +26,7 @@ object Day12 extends App {
       if (d.values.exists(_ == "red") ) {
         0
       } else {
-        d.map(a => sumDeep(a._2)) sum
+        d.map(a => sumDeep(a._2)).sum
       }
     }
     case int: Int => int
@@ -35,4 +36,5 @@ object Day12 extends App {
   println(sumDeep(input))
 
 }
+ */
 

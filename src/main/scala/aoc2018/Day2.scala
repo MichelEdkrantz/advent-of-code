@@ -3,7 +3,7 @@ package aoc2018
 object Day2 extends App {
   val instructions = io.Source.fromFile("data/2018/day2.txt").getLines().toList
 
-  def countsPerLetter(str: String): Map[Char,Int] = str.groupBy(c => c).mapValues(_.size)
+  def countsPerLetter(str: String): Map[Char,Int] = str.groupBy(c => c).view.mapValues(_.size).toMap
 
   //create inverted with letters for different counts
   def countsMap(str: String) = countsPerLetter(str).groupBy(_._2).mapValues(_.keys.toSet)

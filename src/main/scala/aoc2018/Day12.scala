@@ -7,13 +7,13 @@ object Day12 extends App {
   val regex = "(.*) => (.*)".r
   val patterns = instructions.map {
     case regex(a, b) => (a.map(_ == '#'), b == "#")
-  } toList
+  }.toList
   val positivePatterns = patterns.filter(_._2).map(_._1)
 
   def toString(state: Iterable[Boolean]) = state.map {
     case true => '#'
     case false => '.'
-  } mkString
+  }.mkString
 
   def nextState(window: Iterable[Boolean]) = positivePatterns.exists(_ == window)
   def stateSum(st: Iterable[(Long, Boolean)]) = st.filter(_._2).map(_._1).sum

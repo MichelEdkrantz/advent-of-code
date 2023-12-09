@@ -27,7 +27,7 @@ object Day10 extends App {
     val pattern = """((\d)(?:\2)*)""".r
     pattern.findAllMatchIn(s).toSeq.map { m =>
       m.group(1).length.toString + m.group(2)
-    } mkString
+    }.mkString
   }
 
 //  def createStream(seed: String): Stream[String] = {

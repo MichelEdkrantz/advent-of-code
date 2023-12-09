@@ -21,7 +21,7 @@ object Day7 extends App {
       case List(a, b) => b -> a
       case _ => throw new Exception("Could not split")
     }
-  }} toMap)
+  }}.toMap)
 
   def resolve(op: String): Option[Char] = op match {
     //if parsing digit, we are done

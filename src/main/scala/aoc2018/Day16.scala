@@ -6,11 +6,11 @@ object Day16 extends App {
 
   val instructionsA = io.Source.fromFile("data/2018/day16a.txt").getLines().map {
     line => line.split(" ").map(_.toInt).toVector.grouped(4).toVector
-  } toList
+  }.toList
 
   val instructionsB = io.Source.fromFile("data/2018/day16b.txt").getLines().map {
     line => line.split(" ").map(_.toInt).toVector
-  } toList
+  }.toList
 
   val opNames = "addr,addi,mulr,muli,banr,bani,borr,bori,setr,seti,gtir,gtri,gtrr,eqir,eqri,eqrr".split(",").toVector
 
@@ -79,7 +79,7 @@ object Day16 extends App {
       val (next, codes)  = rest.find(_._2.size == 1).head
       resolve(
         known ++ Map(next -> codes.head),
-        rest.filter(_._1 != next).mapValues(_ - codes.head)
+        rest.filter(_._1 != next).view.mapValues(_ - codes.head).toMap
       )
     }
   }
@@ -91,7 +91,7 @@ object Day16 extends App {
         if(out == i(2)) Some(op, i(1)(0)) else None
       }
     }
-    val stringToInts = candidateMappings.groupBy(_._1).mapValues(_.map(_._2).toSet)
+    val stringToInts = candidateMappings.groupBy(_._1).view.mapValues(_.map(_._2).toSet).toMap
     val intToName = resolve(Map.empty, stringToInts).map(_.swap)
 
     val finalRegistry = instructionsB.foldLeft(Vector(0,0,0,0)) { case (reg, input) =>

@@ -20,9 +20,9 @@ object Day8 extends App {
   }
 
   def rotateRow(screen: Screen, row: Int, by: Int) = {
-    screen(row) = (0 until screen.head.length) map { j =>
+    screen(row) = (0 until screen.head.length).map { j =>
       screen(row)((j + screen.head.length - by) % screen.head.length)
-    } toArray
+    }.toArray
   }
 
   def rotateColumn(screen: Screen, col: Int, by: Int) = {

@@ -10,7 +10,7 @@ object Day10 extends App {
   val pattern = "position=<([\\d-]+),([\\d-]+)>velocity=<([\\d-]+),([\\d-]+)>".r
   val parsed = instructions.map(_.replace(" ", "")).map {
     case pattern(x, y, u, v) => ((x.toInt, y.toInt), (u.toInt, v.toInt))
-  } toList
+  }.toList
   val initialPosition = parsed.map(_._1).toVector
   val speed = parsed.map(_._2).toVector
 
