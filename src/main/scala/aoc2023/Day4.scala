@@ -2,7 +2,8 @@ package aoc2023
 
 import scala.collection.mutable
 
-object Day4 extends App {
+object Day4 extends App with tools.AocDay {
+  val (year, day)  = (2023, 4)
 
   case class Card(id: Int, winning: Vector[Int], played: Vector[Int]) {
     val nMatches = played.count(winning.contains)
@@ -16,18 +17,18 @@ object Day4 extends App {
         second.trim.split("\\s+").map(_.toInt).toVector)
   }
 
-  val instructions = scala.io.Source.fromFile("data/2023/day4.txt").getLines.toList.map(parseCard)
-  val testInstructions = scala.io.Source.fromFile("data/2023/day4.test.txt").getLines.toList.map(parseCard)
+  val cards = instructions.map(parseCard)
+  val testCards = testInstructions.map(parseCard)
 
   println(testInstructions)
 
-  val testAns1 = testInstructions.map(_.score).sum
+  val testAns1 = testCards.map(_.score).sum
   println(testAns1)
 
-  val ans1 = instructions.map(_.score).sum
+  val ans1 = cards.map(_.score).sum
   println(ans1)
 
-  def solve2(cards: Array[Card]): Int = {
+  def solveProblemB(cards: Array[Card]): Int = {
     val numCards: mutable.Map[Int, Int] = mutable.Map() ++ cards.map(c => c.id -> 1)
     for {
       card <- cards
@@ -41,11 +42,8 @@ object Day4 extends App {
     numCards.values.sum
   }
 
-  val testAns2 = solve2(testInstructions.toArray)
+  val testAns2 = solveProblemB(testCards.toArray)
   println(testAns2)
-  val ans2 = solve2(instructions.toArray)
+  val ans2 = solveProblemB(cards.toArray)
   println(ans2)
-
-
-
 }

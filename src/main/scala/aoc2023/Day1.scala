@@ -2,9 +2,8 @@ package aoc2023
 
 import scala.util.Try
 
-object Day1 extends App {
-  val instructions1 = io.Source.fromFile("data/2023/day1.txt").getLines().toList
-  val instructionsTest2 = io.Source.fromFile("data/2023/day1.test2.txt").getLines().toList
+object Day1 extends App with tools.AocDay {
+  val (year, day)  = (2023, 1)
 
   def sumLine(nums: (Int, Int)) = nums._1 * 10 + nums._2
 
@@ -13,9 +12,6 @@ object Day1 extends App {
     val last = line.reverseIterator.find(_.isDigit).map(_.asDigit).get
     (first, last)
   }
-
-  val ans1 = instructions1.map(countLine1).map(sumLine).sum
-  println(ans1)
 
   // another version to try here would be some kind of sliding window of size 5
   // regex is super fast but the reverse search is a bit ugly
@@ -43,12 +39,15 @@ object Day1 extends App {
     (first, last)
   }
 
+  val ans1 = instructions.map(countLine1).map(sumLine).sum
+  println(ans1)
   assert(countLine2("twone") == (2, 1))
 
-  val ans2Test = instructionsTest2.map(countLine2).map(sumLine).sum
+  val ans2Test = test2Instructions.map(countLine2).map(sumLine).sum
+  println(ans2Test)
   assert(ans2Test == 281)
 
-  val ans2 = instructions1.map(countLine2).map(sumLine).sum
+  val ans2 = instructions.map(countLine2).map(sumLine).sum
   println(ans2)
 
 

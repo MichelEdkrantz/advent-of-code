@@ -1,9 +1,7 @@
 package aoc2023
 
-object Day3 extends App {
-
-  val instructions = scala.io.Source.fromFile("data/2023/day3.txt").getLines.toList
-  val testInstructions = scala.io.Source.fromFile("data/2023/day3.test.txt").getLines.toList
+object Day3 extends App with tools.AocDay {
+  val (year, day)  = (2023, 3)
 
   def isSymbol(sym: Char): Boolean = sym match {
     case '.' => false
@@ -50,7 +48,7 @@ object Day3 extends App {
   val groups = findLineDigitGroups("467..114..")
   println(groups)
 
-  def solve1(instructions: List[String]) = {
+  def solveProblemA(instructions: List[String]) = {
     val charMat = instructions.map(_.toCharArray).toArray
     val symbolMat = charMat.map(_.map(isSymbol))
     instructions.zipWithIndex.map { case (line, lineIndex) =>
@@ -61,11 +59,11 @@ object Day3 extends App {
     }.sum
   }
 
-  val testAns = solve1(testInstructions)
+  val testAns = solveProblemA(testInstructions)
   println(testAns)
   assert(testAns == 4361)
   //537732
-  val realAns = solve1(instructions)
+  val realAns = solveProblemA(instructions)
   println(realAns)
 
   def findLineGears(line: String): List[Int] = {
@@ -75,7 +73,7 @@ object Day3 extends App {
   // solve part 2
   // find all gear symbols.
   // then find all numbers around them
-  def solve2(instructions: List[String]): Int = {
+  def solveProblemB(instructions: List[String]): Int = {
     val lineDigitGroups = instructions.map(findLineDigitGroups).toArray
     instructions.map(findLineGears).zipWithIndex.map { case (gears, lineIndex) =>
       // get a line with gear positions
@@ -99,9 +97,9 @@ object Day3 extends App {
 
   }
 
-  val testAns2 = solve2(testInstructions)
+  val testAns2 = solveProblemB(testInstructions)
   println(testAns2)
-  val ans2 = solve2(instructions)
+  val ans2 = solveProblemB(instructions)
   println(ans2)
   assert(ans2 == 84883664)
 }

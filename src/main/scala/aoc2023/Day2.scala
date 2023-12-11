@@ -1,6 +1,7 @@
 package aoc2023
 
-object Day2 extends App {
+object Day2 extends App with tools.AocDay {
+  val (year, day)  = (2023, 2)
 
   val LineParser = "Game (\\d+): (.*)".r
   val Red = "(\\d+) red".r
@@ -30,11 +31,15 @@ object Day2 extends App {
   }
 
   val max = DiceThrow(12, 13, 14)
+  def getGamePower(gameLine: GameLine): Int = {
+    val m = gameLine.diceThrows.foldLeft(DiceThrow(0,0,0)) { case (a, b) =>
+      DiceThrow(Math.max(a.red, b.red), Math.max(a.green, b.green), Math.max(a.blue, b.blue))
+    }
+    m.red * m.green * m.blue
+  }
 
-  val instructions = scala.io.Source.fromFile("data/2023/day2.txt").getLines.toList.map(parseLine)
-  val testInstructions = scala.io.Source.fromFile("data/2023/day2.test.txt").getLines.toList.map(parseLine)
 
-  def solve1(gameLines: List[GameLine]) = {
+  def solveProblemA(gameLines: List[GameLine]) = {
     def gameOk(gameLine: GameLine): Boolean = {
       gameLine.diceThrows.forall { dt =>
         dt.red <= max.red && dt.green <= max.green && dt.blue <= max.blue
@@ -44,29 +49,23 @@ object Day2 extends App {
     okGames.map(_.gameId).sum
   }
 
-  val testAns1 = solve1(testInstructions)
-  println(testAns1)
-
-  val ans1 = solve1(instructions)
-  println(ans1)
-
-  def getGamePower(gameLine: GameLine): Int = {
-    val m = gameLine.diceThrows.foldLeft(DiceThrow(0,0,0)) { case (a, b) =>
-      DiceThrow(Math.max(a.red, b.red), Math.max(a.green, b.green), Math.max(a.blue, b.blue))
-    }
-    m.red * m.green * m.blue
-  }
-
-  def solve2(gameLines: List[GameLine]) = {
+  def solveProblemB(gameLines: List[GameLine]) = {
     gameLines.map(getGamePower).sum
   }
 
-  val testAns2 = solve2(testInstructions)
+  val gameLines = instructions.map(parseLine)
+  val testGameLines = testInstructions.map(parseLine)
+
+  val testAns1 = solveProblemA(testGameLines)
+  println(testAns1)
+
+  val ans1 = solveProblemA(gameLines)
+  println(ans1)
+
+  val testAns2 = solveProblemB(testGameLines)
   println(testAns2)
 
-  val ans2 = solve2(instructions)
+  val ans2 = solveProblemB(gameLines)
   println(ans2)
-
-
 
 }
