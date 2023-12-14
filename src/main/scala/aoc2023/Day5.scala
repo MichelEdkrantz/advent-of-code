@@ -1,29 +1,32 @@
 package aoc2023
+
 import scala.collection.immutable.NumericRange
 
 object Day5 extends App with tools.AocDay {
-  val (year, day)  = (2023, 5)
+  val (year, day) = (2023, 5)
   type NumRange = NumericRange.Inclusive[Long]
+
   case class SeedInstructions(seeds: Vector[Long], markerMaps: List[MarkerMap])
+
   case class RangeDef(destinationStart: Long, sourceStart: Long, rangeLen: Long) {
     val destinationEnd: Long = destinationStart + rangeLen - 1
     val sourceEnd: Long = sourceStart + rangeLen - 1
-    val destRange: NumericRange.Inclusive[Long] = destinationStart to destinationEnd
-    val srcRange: NumericRange.Inclusive[Long] = sourceStart to sourceEnd
   }
+
   case class MarkerMap(from: String, to: String, mappings: List[RangeDef]) {
     val fullname = from + "-to-" + to
   }
 
   //parsed lines
   val MapLine = "(.*)-to-(.*) map:".r
+
   def parseInstructions(lines: List[String]): SeedInstructions = {
     val seeds = lines.head.dropWhile(_ != ':').drop(2).split("\\s+").map(_.toLong).toVector
     val markerMaps = lines.tail.filter(_.nonEmpty).foldLeft(List[MarkerMap]()) { case (acc, line) =>
       line match {
         case MapLine(from, to) => acc :+ MarkerMap(from, to, Nil)
         case str =>
-          val init = if(acc.length > 1) acc.init else Nil
+          val init = if (acc.length > 1) acc.init else Nil
           val rangeDef = str.split("\\s+").map(_.toLong) match {
             case Array(dest, src, len) => RangeDef(dest, src, len)
           }
@@ -43,24 +46,14 @@ object Day5 extends App with tools.AocDay {
     destinations.headOption.getOrElse(seed)
   }
 
-  def convertMarkerMapRange(range: NumRange, m: RangeDef): NumRange = {
-      // range is partially overlapping
-      val start = Math.max(m.sourceStart, range.start)
-      val end = Math.min(m.sourceEnd, range.end)
-      val diff = end - start
-      val destStart = m.destinationStart + (start - m.sourceStart)
-      destStart to destStart + diff
-  }
-
-  def convertRange(range: NumRange,
-                   markerMap: MarkerMap): List[NumRange] = {
+  def convertRange(range: NumRange, markerMap: MarkerMap): List[NumRange] = {
     var mappedRanges = List[NumRange]()
     var pos = range.start
     for {
       m <- markerMap.mappings
       if m.sourceStart <= range.end && m.sourceEnd >= range.start
     } {
-      if(pos < m.sourceStart) {
+      if (pos < m.sourceStart) {
         mappedRanges :+= pos to m.sourceStart - 1
       }
       mappedRanges :+= convertMarkerMapRange(range, m)
@@ -70,6 +63,15 @@ object Day5 extends App with tools.AocDay {
       mappedRanges :+= pos to range.end
 
     mappedRanges
+  }
+
+  def convertMarkerMapRange(range: NumRange, m: RangeDef): NumRange = {
+    // range is partially overlapping
+    val start = Math.max(m.sourceStart, range.start)
+    val end = Math.min(m.sourceEnd, range.end)
+    val diff = end - start
+    val destStart = m.destinationStart + (start - m.sourceStart)
+    destStart to destStart + diff
   }
 
   def convertRangeWithMaps(range: NumRange,
