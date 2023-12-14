@@ -1,11 +1,17 @@
 package aoc2023
-import scala.collection.parallel.CollectionConverters._
+import scala.collection.immutable.NumericRange
 
 object Day5 extends App with tools.AocDay {
   val (year, day)  = (2023, 5)
+  type NumRange = NumericRange.Inclusive[Long]
   case class SeedInstructions(seeds: Vector[Long], markerMaps: List[MarkerMap])
-  case class RangeDef(destinationStart: Long, sourceStart: Long, rangeLen: Long)
-  case class MarkerMap(from: String, to: String, mapping: List[RangeDef]) {
+  case class RangeDef(destinationStart: Long, sourceStart: Long, rangeLen: Long) {
+    val destinationEnd: Long = destinationStart + rangeLen - 1
+    val sourceEnd: Long = sourceStart + rangeLen - 1
+    val destRange: NumericRange.Inclusive[Long] = destinationStart to destinationEnd
+    val srcRange: NumericRange.Inclusive[Long] = sourceStart to sourceEnd
+  }
+  case class MarkerMap(from: String, to: String, mappings: List[RangeDef]) {
     val fullname = from + "-to-" + to
   }
 
@@ -21,21 +27,60 @@ object Day5 extends App with tools.AocDay {
           val rangeDef = str.split("\\s+").map(_.toLong) match {
             case Array(dest, src, len) => RangeDef(dest, src, len)
           }
-          init :+ acc.last.copy(mapping = acc.last.mapping :+ rangeDef)
+          init :+ acc.last.copy(mappings = acc.last.mappings :+ rangeDef)
       }
-    }
+    }.map(m => m.copy(mappings = m.mappings.sortBy(_.sourceStart)))
     SeedInstructions(seeds, markerMaps)
   }
 
   def convert(seed: Long, map: MarkerMap): Long = {
     val destinations = for {
-      rangeDef <- map.mapping
+      rangeDef <- map.mappings
       if rangeDef.sourceStart <= seed && seed < rangeDef.sourceStart + rangeDef.rangeLen
     } yield {
       rangeDef.destinationStart + (seed - rangeDef.sourceStart)
     }
     destinations.headOption.getOrElse(seed)
   }
+
+  def convertMarkerMapRange(range: NumRange, m: RangeDef): NumRange = {
+      // range is partially overlapping
+      val start = Math.max(m.sourceStart, range.start)
+      val end = Math.min(m.sourceEnd, range.end)
+      val diff = end - start
+      val destStart = m.destinationStart + (start - m.sourceStart)
+      destStart to destStart + diff
+  }
+
+  def convertRange(range: NumRange,
+                   markerMap: MarkerMap): List[NumRange] = {
+    var mappedRanges = List[NumRange]()
+    var pos = range.start
+    for {
+      m <- markerMap.mappings
+      if m.sourceStart <= range.end && m.sourceEnd >= range.start
+    } {
+      if(pos < m.sourceStart) {
+        mappedRanges :+= pos to m.sourceStart - 1
+      }
+      mappedRanges :+= convertMarkerMapRange(range, m)
+      pos = m.sourceEnd + 1
+    }
+    if (pos < range.end)
+      mappedRanges :+= pos to range.end
+
+    mappedRanges
+  }
+
+  def convertRangeWithMaps(range: NumRange,
+                           markerMaps: List[MarkerMap]
+                          ): List[NumRange] = {
+    //propagate a range through all the maps
+    markerMaps.foldLeft(List(range)) { case (acc, map) =>
+      acc.flatMap(convertRange(_, map))
+    }
+  }
+
 
   def solveProblemA(inst: SeedInstructions): Long = {
     inst.seeds.map(inst.markerMaps.foldLeft(_)(convert)).min
@@ -48,7 +93,7 @@ object Day5 extends App with tools.AocDay {
     seed to seed + seeds(si + 1) - 1
   }
 
-  def solveProblemB(inst: SeedInstructions): Long = {
+  def solveProblemBSlow(inst: SeedInstructions): Long = {
     val seedRanges = getSeedRanges(inst.seeds)
     val nSeeds = seedRanges.map(_.length).sum
     println(s"nSeeds=$nSeeds")
@@ -61,6 +106,13 @@ object Day5 extends App with tools.AocDay {
     }
   }
 
+  def solveProblemB(inst: SeedInstructions): Long = {
+    val seedRanges = getSeedRanges(inst.seeds)
+    seedRanges.map(convertRangeWithMaps(_, inst.markerMaps)).map {
+      _.map(_.min).min
+    }.min
+  }
+
   val testParsed = parseInstructions(testInstructions)
   val parsed = parseInstructions(instructions)
   val seedToSoil = testParsed.markerMaps.find(_.fullname == "seed-to-soil").get
@@ -70,9 +122,13 @@ object Day5 extends App with tools.AocDay {
     assert(convert(seed, seedToSoil) == expected)
   }
 
+  private val testRange = 0L to 99L
+  //println("seed-to-soil", seedToSoil)
+  val r = convertRange(testRange, seedToSoil)
   println(solveProblemA(testParsed))
   println(solveProblemA(parsed))
   println(solveProblemB(testParsed))
   println(solveProblemB(parsed))
+
 
 }
