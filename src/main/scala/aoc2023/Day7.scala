@@ -50,7 +50,7 @@ object Day7 extends App with AocDay {
     }
   }
 
-  def solveProblem1(hands: Seq[Hand]) = {
+  def solveProblem(hands: Seq[Hand]) = {
     val sorted = hands.sortWith(handSorter)
     sorted foreach { h =>
       println(s"Hand ${h.str} has strength=${h.strength}")
@@ -62,8 +62,8 @@ object Day7 extends App with AocDay {
 
   val testInput = testInstructions.map(parseLine)
   val input = instructions.map(parseLine)
-  println(solveProblem1(testInput))
-  println(solveProblem1(input))
+  println(solveProblem(testInput))
+  println(solveProblem(input))
 
 
 }
