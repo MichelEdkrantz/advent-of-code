@@ -7,6 +7,7 @@ import scala.collection.mutable
 object Day10 extends App with AocDay {
   val (year, day) = (2023, 10)
   type CharGrid = Vector[Vector[Char]]
+
   def parse(instructions: List[String]): CharGrid = instructions.map(_.toVector).toVector
 
   val north = '|' :: '7' :: 'F' :: Nil
@@ -38,19 +39,18 @@ object Day10 extends App with AocDay {
     val combos: List[(Int, Int, List[Char])] = cell match {
       case '|' => List((x, y - 1, north), (x, y + 1, south))
       case '-' => List((x - 1, y, west), (x + 1, y, east))
-
       case '7' => List((x, y + 1, south), (x - 1, y, west))
       case 'J' => List((x, y - 1, north), (x - 1, y, west))
       case 'F' => List((x, y + 1, south), (x + 1, y, east))
       case 'L' => List((x, y - 1, north), (x + 1, y, east))
-
       case 'S' => List((x, y - 1, north), (x, y + 1, south), (x - 1, y, west), (x + 1, y, east))
     }
+
     //we must now check the bounds and also check that the neighbor has a compatible cell
-    val okNeighbors = combos.filter(c => checkBounds(grid, (c._1, c._2))).filter { case (x, y, ok)  =>
-      ok.contains(grid(y)(x))
-    }.map(c => (c._1, c._2))
-    okNeighbors
+    combos
+      .filter { case (x, y, okConnectingChars) =>
+        checkBounds(grid, (x, y)) && okConnectingChars.contains(grid(y)(x))
+      }.map(c => (c._1, c._2))
   }
 
   def solveOne(grid: CharGrid) = {
@@ -63,14 +63,14 @@ object Day10 extends App with AocDay {
     // so we can stop when we reach that
     val visited = mutable.Set[(Int, Int)]()
     var mDist = 0
-    while(mDist < Int.MaxValue) {
+    while (mDist < Int.MaxValue) {
       val (pos, minDist) = distances.filterNot(d => visited.contains(d._1)).minBy(_._2)
       //println("pos: " + pos + " minDist: " + minDist)
       mDist = minDist
-      if(minDist != Int.MaxValue) {
+      if (minDist != Int.MaxValue) {
         getNeighbors(grid, pos).foreach { neighbor =>
           val dist = minDist + 1
-          if(dist < distances(neighbor)) {
+          if (dist < distances(neighbor)) {
             distances(neighbor) = dist
           }
         }
@@ -89,10 +89,12 @@ object Day10 extends App with AocDay {
 
   def solveProblemA(grid: CharGrid) = {
     val distances = solveOne(grid)
+
     def getDist(pos: (Int, Int)): Int = {
       val d = distances(pos)
-      if(d == Int.MaxValue) -1 else d.toChar
+      if (d == Int.MaxValue) -1 else d.toChar
     }
+
     val d = grid.zipWithIndex.map(row => row._1.zipWithIndex.map(cell => getDist((cell._2, row._2))))
     d.foreach(row => println(row.map(c => f"$c%-3s").mkString("|")))
 
