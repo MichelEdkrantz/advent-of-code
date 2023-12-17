@@ -18,7 +18,7 @@ object Day9 extends App with AocDay {
     }
   }
 
-  def solveOne(line: Vector[Int]): Int = {
+  def solveOneA(line: Vector[Int]): Int = {
     layerDiff(List(line)).map(_.last).sum
   }
 
@@ -27,7 +27,7 @@ object Day9 extends App with AocDay {
   }
 
   def solveProblemA(input: Seq[Vector[Int]]): Int = {
-    input.map(solveOne).sum
+    input.map(solveOneA).sum
   }
 
   def solveProblemB(input: Seq[Vector[Int]]): Int = {
