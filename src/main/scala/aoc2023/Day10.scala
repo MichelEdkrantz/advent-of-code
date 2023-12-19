@@ -54,13 +54,13 @@ object Day10 extends App with AocDay {
         walk(dir, nextPos :: path)
       }
     }
-    val neigbours = List(
+    val neighbours = List(
       (start + Position(0, -1), 'N', Seq('|', 'F', '7')),
       (start + Position(0, 1), 'S', Seq('|', 'J', 'L')),
       (start + Position(-1, 0), 'W', Seq('-', 'F', 'L')),
       (start + Position(1, 0), 'E', Seq('-', '7', 'J'))
     )
-    val oneNeighbour = neigbours.find { case (np, dir, okConnections) =>
+    val (n, dir, _) = neighbours.find { case (np, _, okConnections) =>
       Try {
         grid(np.y)(np.x)
       }.toOption match {
@@ -68,7 +68,7 @@ object Day10 extends App with AocDay {
         case None => false
       }
     }.get
-    walk(oneNeighbour._2, oneNeighbour._1 :: start :: Nil)
+    walk(dir, n :: start :: Nil)
   }
 
   def solveProblemA(grid: CharGrid): Int = {
