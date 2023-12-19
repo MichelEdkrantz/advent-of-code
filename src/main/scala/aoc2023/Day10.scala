@@ -2,13 +2,18 @@ package aoc2023
 
 import tools.AocDay
 
+import scala.util.Try
+
 object Day10 extends App with AocDay {
   val (year, day) = (2023, 10)
   type CharGrid = Vector[Vector[Char]]
 
   def parse(instructions: List[String]): CharGrid = instructions.map(_.toVector).toVector
 
-  case class Position(x: Int, y: Int)
+  case class Position(x: Int, y: Int) {
+    def +(p: Position) = Position(p.x + x, p.y + y)
+    def -(p: Position) = Position(x - p.x, y - p.y)
+  }
 
   def findStart(grid: CharGrid): Position = (for {
     (row, y) <- grid.zipWithIndex
@@ -49,8 +54,21 @@ object Day10 extends App with AocDay {
         walk(dir, nextPos :: path)
       }
     }
-    // this assumes we always walk east
-    walk('E', start.copy(x = start.x + 1) :: start :: Nil)
+    val neigbours = List(
+      (start + Position(0, -1), 'N', Seq('|', 'F', '7')),
+      (start + Position(0, 1), 'S', Seq('|', 'J', 'L')),
+      (start + Position(-1, 0), 'W', Seq('-', 'F', 'L')),
+      (start + Position(1, 0), 'E', Seq('-', '7', 'J'))
+    )
+    val oneNeighbour = neigbours.find { case (np, dir, okConnections) =>
+      Try {
+        grid(np.y)(np.x)
+      }.toOption match {
+        case Some(c) => okConnections.contains(c)
+        case None => false
+      }
+    }.get
+    walk(oneNeighbour._2, oneNeighbour._1 :: start :: Nil)
   }
 
   def solveProblemA(grid: CharGrid): Int = {
