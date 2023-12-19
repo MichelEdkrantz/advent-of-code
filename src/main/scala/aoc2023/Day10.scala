@@ -15,26 +15,32 @@ object Day10 extends App with AocDay {
   val east = '-' :: '7' :: 'J' :: Nil
   val west = '-' :: 'L' :: 'F' :: Nil
 
-  def findStart(grid: CharGrid) = (for {
+  case class Position(x: Int, y: Int)
+
+  def findStart(grid: CharGrid): Position = (for {
     (row, y) <- grid.zipWithIndex
     (cell, x) <- row.zipWithIndex
     if cell == 'S'
-  } yield (x, y)).head
+  } yield Position(x, y)).head
 
-  def createDistanceMap(grid: CharGrid): mutable.Map[(Int, Int), Int] = {
+  def createDistanceMap(grid: CharGrid): mutable.Map[Position, Int] = {
     mutable.Map() ++ (for {
       (row, y) <- grid.zipWithIndex
       (_, x) <- row.zipWithIndex
-    } yield ((x, y) -> Int.MaxValue)).toMap
+    } yield (Position(x, y) -> Int.MaxValue)).toMap
   }
 
-  def checkBounds(grid: CharGrid, pos: (Int, Int)): Boolean = {
-    val (x, y) = pos
+  def checkBounds(grid: CharGrid, pos: Position): Boolean = {
+    val (x, y) = (pos.x, pos.y)
     x >= 0 && x < grid.head.length && y >= 0 && y < grid.length
   }
 
-  def getNeighbors(grid: CharGrid, pos: (Int, Int)): List[(Int, Int)] = {
-    val (x, y) = pos
+  // TODO, this code is flawed. Using djiikstra's algorithm for part 1 is overkill, since we only need to follow the path
+  // it never forks, so we can just follow the path and keep track of the distance
+  // for part b, getting the path will be for free.
+
+  def getNeighbors(grid: CharGrid, pos: Position): List[Position] = {
+    val (x, y) = (pos.x, pos.y)
     val cell = grid(y)(x)
     val combos: List[(Int, Int, List[Char])] = cell match {
       case '|' => List((x, y - 1, north), (x, y + 1, south))
@@ -49,8 +55,8 @@ object Day10 extends App with AocDay {
     //we must now check the bounds and also check that the neighbor has a compatible cell
     combos
       .filter { case (x, y, okConnectingChars) =>
-        checkBounds(grid, (x, y)) && okConnectingChars.contains(grid(y)(x))
-      }.map(c => (c._1, c._2))
+        checkBounds(grid, Position(x, y)) && okConnectingChars.contains(grid(y)(x))
+      }.map(c => Position(c._1, c._2))
   }
 
   def solveOne(grid: CharGrid) = {
@@ -61,9 +67,10 @@ object Day10 extends App with AocDay {
     // use dijkstra's algorithm
     // the nodes not on the "loop" will have a distance of Int.MaxValue,
     // so we can stop when we reach that
-    val visited = mutable.Set[(Int, Int)]()
+    val visited = mutable.Set[Position]()
     var mDist = 0
     while (mDist < Int.MaxValue) {
+      //IMPROVE this is slow on a large grid
       val (pos, minDist) = distances.filterNot(d => visited.contains(d._1)).minBy(_._2)
       //println("pos: " + pos + " minDist: " + minDist)
       mDist = minDist
@@ -77,29 +84,53 @@ object Day10 extends App with AocDay {
         visited += pos
       }
     }
-    /*for {
-      (row, y) <- grid.zipWithIndex
-      (_, x) <- row.zipWithIndex
-    } yield {
-      val d = distances((x, y))
-      if(d == Int.MaxValue) -1 else d
-    }*/
-    distances.toMap
+    grid.zipWithIndex.map { case (row, y) =>
+      row.zipWithIndex.map { case (cell, x) =>
+        val d = distances(Position(x, y))
+        if(d == Int.MaxValue) -1 else d
+      }
+    }
+  }
+
+  def printDistanceGrid(distances: Vector[Vector[Int]]) = {
+    distances.foreach(row =>
+      println(row.map(c => f"$c%-3s").mkString)
+    )
+  }
+
+  def findPath(start: Position,
+               grid: CharGrid,
+               distances: Vector[Vector[Int]]): Seq[Position] = {
+    // walk in all possible directions and find the shortest path
+    val seeds = getNeighbors(grid, start)
+    val paths = seeds.map { seed =>
+      val path = mutable.ListBuffer[Position]()
+      var prev = start
+      var pos = seed
+      // look for a neighbors with larger distance
+      while (distances(pos.y)(pos.x) >= distances(prev.y)(prev.x)) {
+        path += pos
+        prev = pos
+        pos = getNeighbors(grid, pos).maxBy(n => distances(n.y)(n.x))
+      }
+      path.toList
+    }
+    val twoPaths = paths.groupBy(_.size).maxBy(_._1)._2
+    start :: twoPaths.head ::: twoPaths.last.init.reverse
   }
 
   def solveProblemA(grid: CharGrid) = {
     val distances = solveOne(grid)
-
-    def getDist(pos: (Int, Int)): Int = {
-      val d = distances(pos)
-      if (d == Int.MaxValue) -1 else d.toChar
+    val path = findPath(findStart(grid), grid, distances)
+    val pathCoords = path.toSet
+    distances.zipWithIndex.foreach { case (row, y) =>
+      println(row.zipWithIndex.map {
+        case (c, x) if c > -1 && pathCoords.contains(Position(x, y)) => "x"
+        case _ => "."
+      }.mkString)
     }
-
-    val d = grid.zipWithIndex.map(row => row._1.zipWithIndex.map(cell => getDist((cell._2, row._2))))
-    d.foreach(row => println(row.map(c => f"$c%-3s").mkString("|")))
-
-    val maxD = distances.filterNot(d => d._2 == Int.MaxValue).maxBy(_._2)._2
-    maxD
+    //println(path)
+    distances.flatten.max
   }
 
   val testInput = parse(testInstructions)
